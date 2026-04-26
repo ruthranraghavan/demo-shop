@@ -149,7 +149,8 @@ function renderCart() {
 
   if (cart.length === 0) {
     cartEmptyMsg.classList.remove('hidden');
-    cartSummary.classList.add('hidden');
+    cartSummary.classList.remove('hidden');
+    cartTotalEl.textContent = '$0.00';
     return;
   }
 
@@ -183,7 +184,10 @@ function renderCart() {
 // Checkout
 // ---------------------------------------------------------------------------
 function handleCheckout() {
-  if (cart.length === 0) return;
+  if (cart.length === 0) {
+    window.alert('Your cart is empty!');
+    return;
+  }
 
   const itemCount = cart.length;
   const total = cart.reduce((sum, item) => sum + item.price, 0);
@@ -215,6 +219,7 @@ function showShop() {
   loginSection.classList.add('hidden');
   shopSection.classList.remove('hidden');
   successSection.classList.add('hidden');
+  renderCart(); // ensure cart UI reflects current state every time the shop is shown
 }
 
 function showSuccess() {
