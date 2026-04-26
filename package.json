@@ -1,0 +1,13 @@
+{
+  "name": "demo-shop",
+  "version": "1.0.0",
+  "description": "Demo e-commerce app for Playwright testing",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:ci": "playwright test --reporter=github"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}

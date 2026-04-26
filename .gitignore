@@ -1,0 +1,9 @@
+# dependencies
+node_modules/
+
+# editor
+.vscode/
+
+# Playwright outputs
+test-results/
+playwright-report/

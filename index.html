@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo Shop</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Login Section -->
+  <section id="login-section">
+    <div class="card" id="login-card">
+      <h1>Demo Shop</h1>
+      <h2>Sign In</h2>
+      <form id="login-form" novalidate>
+        <div class="field">
+          <label for="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="Enter username"
+            autocomplete="username"
+            required
+          />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter password"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+        <p id="login-error" class="error-msg" role="alert" aria-live="polite"></p>
+        <button type="submit" id="login-btn">Login</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Shop Section (hidden until logged in) -->
+  <section id="shop-section" class="hidden">
+    <header class="shop-header">
+      <h1>Demo Shop</h1>
+      <div class="header-right">
+        <span id="welcome-msg"></span>
+        <button id="logout-btn">Logout</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Product List -->
+      <section id="products-section">
+        <h2>Products</h2>
+        <div class="product-grid">
+
+          <div class="product-card" id="product-laptop">
+            <div class="product-img laptop-img" aria-label="Laptop image"></div>
+            <h3 class="product-name">Laptop</h3>
+            <p class="product-price">$999.00</p>
+            <button class="add-to-cart" data-id="laptop" data-name="Laptop" data-price="999">
+              Add to Cart
+            </button>
+          </div>
+
+          <div class="product-card" id="product-smartphone">
+            <div class="product-img smartphone-img" aria-label="Smartphone image"></div>
+            <h3 class="product-name">Smartphone</h3>
+            <p class="product-price">$499.00</p>
+            <!-- Intentional UI inconsistency: uses add-to-cart-typo instead of add-to-cart -->
+            <button class="add-to-cart-typo" data-id="smartphone" data-name="Smartphone" data-price="499">
+              Add to Cart
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Cart Section -->
+      <section id="cart-section">
+        <h2>Your Cart</h2>
+        <div id="cart-empty" class="cart-empty">Your cart is empty.</div>
+        <ul id="cart-items" class="cart-list"></ul>
+        <div id="cart-summary" class="cart-summary hidden">
+          <p>Total: <strong id="cart-total">$0.00</strong></p>
+          <button id="checkout-btn">Checkout</button>
+        </div>
+      </section>
+    </main>
+  </section>
+
+  <!-- Success Section (hidden until checkout) -->
+  <section id="success-section" class="hidden">
+    <div class="card" id="success-card">
+      <div class="success-icon" aria-hidden="true">&#10003;</div>
+      <h2>Order Placed!</h2>
+      <p id="success-message">Thank you for your purchase.</p>
+      <button id="continue-shopping-btn">Continue Shopping</button>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
