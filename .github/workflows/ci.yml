@@ -1,0 +1,152 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 1 — Run Playwright Tests
+  # ──────────────────────────────────────────────────────────────────────────
+  test:
+    name: Run Playwright Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run tests
+        run: npm run test:ci
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 7
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 2 — AI-Style PR Analysis (pull_request only)
+  # ──────────────────────────────────────────────────────────────────────────
+  pr-analysis:
+    name: AI-Style PR Analysis
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Analyse changed files
+        run: |
+          echo "============================================"
+          echo "        AI-Style PR Analysis Report        "
+          echo "============================================"
+          echo ""
+
+          CHANGED=$(git diff --name-only origin/main)
+
+          echo "📂 Changed Files:"
+          if [ -z "$CHANGED" ]; then
+            echo "  (no changed files detected)"
+          else
+            echo "$CHANGED" | sed 's/^/  - /'
+          fi
+          echo ""
+
+          echo "🗂️  Impacted Areas:"
+          AREAS=""
+
+          echo "$CHANGED" | grep -qE '\.(html)$'    && AREAS="$AREAS\n  - UI / HTML structure (index.html)"
+          echo "$CHANGED" | grep -qE '\.(css)$'     && AREAS="$AREAS\n  - Styles / layout (styles.css)"
+          echo "$CHANGED" | grep -qE '\.(js)$' | grep -v 'spec' && AREAS="$AREAS\n  - Application logic (app.js)"
+          echo "$CHANGED" | grep -qE 'spec\.(js|ts)$' && AREAS="$AREAS\n  - Test suite"
+          echo "$CHANGED" | grep -qE 'package\.json|package-lock\.json' && AREAS="$AREAS\n  - Dependencies"
+          echo "$CHANGED" | grep -qE '\.github/'    && AREAS="$AREAS\n  - CI/CD pipeline"
+          echo "$CHANGED" | grep -qE 'playwright\.config\.(js|ts)$' && AREAS="$AREAS\n  - Playwright configuration"
+
+          if [ -z "$AREAS" ]; then
+            printf "  - General / miscellaneous changes\n"
+          else
+            printf "$AREAS\n"
+          fi
+          echo ""
+
+          echo "🧪  Test Suggestions:"
+          SUGGESTIONS=""
+
+          echo "$CHANGED" | grep -qE 'index\.html'  && SUGGESTIONS="$SUGGESTIONS\n  - Re-run login and checkout tests to verify HTML structure changes"
+          echo "$CHANGED" | grep -qE '\.css$'       && SUGGESTIONS="$SUGGESTIONS\n  - Run visual regression checks; verify button class selectors (.add-to-cart, .add-to-cart-typo)"
+          echo "$CHANGED" | grep -qE 'app\.js'      && SUGGESTIONS="$SUGGESTIONS\n  - Run full test suite: login flows (valid, invalid, admin bug) and checkout scenarios"
+          echo "$CHANGED" | grep -qE 'package\.json' && SUGGESTIONS="$SUGGESTIONS\n  - Verify no dependency version conflicts; re-run npm audit"
+          echo "$CHANGED" | grep -qE '\.github/workflows' && SUGGESTIONS="$SUGGESTIONS\n  - Validate workflow syntax with actionlint; open a test PR to verify all jobs trigger correctly"
+          echo "$CHANGED" | grep -qE 'playwright\.config' && SUGGESTIONS="$SUGGESTIONS\n  - Confirm baseURL, timeout, and reporter settings are correct for all environments"
+
+          if [ -z "$SUGGESTIONS" ]; then
+            printf "  - Run the full Playwright test suite as a precaution\n"
+          else
+            printf "$SUGGESTIONS\n"
+          fi
+          echo ""
+          echo "============================================"
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 3 — Deploy to GitHub Pages (push to main only)
+  # ──────────────────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
